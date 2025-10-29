@@ -182,20 +182,21 @@ if run_sim:
         ax3.set_xlabel("Average Cost ($)")
         ax3.set_ylabel("Observed Mean Score")
         ax.tick_params(axis='both', labelsize=6)
-        ax3.legend()
+        ax3.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
         st.pyplot(fig3, use_container_width=True)
 
     with col2:
          # Plot observed mean vs true mean
-        st.subheader("🎯 Observed Mean vs True Mean (Evaluator Bias Visualization)")
+        st.subheader("🎯 Observed Mean vs True Mean (Evaluator Bias)")
         fig2, ax2 = plt.subplots(figsize=(4.5, 2.8))
         for eval_type in summary_df["EvaluatorType"].unique():
             sub = summary_df[summary_df["EvaluatorType"] == eval_type]
             ax2.bar(sub["Variant"] + f" ({eval_type})", sub["ObservedMean_Mean"], yerr=sub["ObservedMean_Std"], label=eval_type)
         ax2.axhline(y=list(variant_params.values())[0]["mean"], color="gray", linestyle="--", label="True Means")
         ax2.set_ylabel("Observed Mean Score")
+        ax2.set_xlabel("Evaluator and Variant")
         ax.tick_params(axis='both', labelsize=4)
-        ax2.legend()
+        ax2.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
         st.pyplot(fig2, use_container_width=True)
 
 
