@@ -247,10 +247,14 @@ if mc_button:
     ax_mc.bar(mc_results["EvaluatorType"], mc_results["WrongDecisionRate"], color="tomato")
     ax_mc.set_ylabel("Wrong Decision Rate")
     ax_mc.set_ylim(0, 1)
-    ax_mc.set_title("Probability of Launching Wrong Variant")
+    ax_mc.set_xlabel("X-Axis Label", fontsize=8)
+    ax_mc.set_ylabel("Y-Axis Label", fontsize=8)
+    ax_mc.set_title("Probability of Launching Wrong Variant", fontsize=10)
     ax.tick_params(axis='both', labelsize=4)
     for i, v in enumerate(mc_results["WrongDecisionRate"]):
         ax_mc.text(i, v + 0.02, f"{v:.2f}", ha="center", fontweight="bold")
+    ax_mc.tick_params(axis='both', which='major', labelsize=8)
+
     st.pyplot(fig_mc, use_container_width=False)
 
     st.markdown(f"🧠 **True best variant:** `{mc_results.iloc[0]['TrueBestVariant']}`")

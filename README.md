@@ -25,7 +25,7 @@ Unlike normal product features — which behave deterministically and are easy t
 | **Evaluation** | Automated, cheap | LLM-based or human, costly |
 | **Cost per sample** | Negligible | Token-based ($/call), latency-based |
 | **Decision type** | Binary ("A wins") | Multi-objective ("better + faster + cheaper") |
-| **Risk profile** | UX regression | Factual, ethical, or bias errors |
+
 
 **Implications for PMs and Operators:**
 - Experiments must consider **uncertainty, noise, and subjective judgment**.  
@@ -141,8 +141,83 @@ scikit-learn, NumPy, Pandas, Matplotlib/Plotly, Streamlit, (optional) OpenAI or 
 | Cost model complexity | Start with token-based linear model; add latency later |
 | Too technical for PM audience | Focus on visualization and plain-language interpretation |
 
----
+## Experiment Simulator Inputs
 
+### 1️⃣ True Mean & Standard Deviation per Variant
+
+In the simulator, each variant requires a **true mean (`μ`)** and **standard deviation (`σ`)** for the metric being evaluated. These values are used to generate synthetic data for each variant.
+
+**How to determine `μ` and `σ`:**
+
+- **Historical Data**
+
+```python
+import numpy as np
+
+baseline_values = np.array([100, 105, 98, 102, 110])
+mu_baseline = np.mean(baseline_values)
+sigma_baseline = np.std(baseline_values)
+# If variant B expected to increase by 5%
+mu_B = mu_baseline * 1.05
+sigma_B = sigma_baseline  # or adjust proportionally
+```
+
+#### Pilot / Small-Scale Test
+* Run a small pre-experiment to empirically estimate mean and std.
+
+#### Analytical / Parametric Assumptions
+* Use a known distribution, e.g., CTR ~ Binomial(n_trials, p_true).
+
+Notes: 
+1. In real experiments, true mean and std are unknown. In the simulator, these are assumptions or estimates.
+
+### 2️⃣ Evaluator Bias per Variant
+
+Each evaluator may systematically over- or under-rate a variant.
+This is how one can estimate it:
+
+#### Collect repeated measurements
+* Have each evaluator rate multiple items from each variant. 
+* Compute the average difference between evaluator rating and true metric:
+```
+evaluator_bias = np.mean(evaluator_ratings - true_values)
+observed_rating = true_value + bias_evaluator + random_noise
+```
+#### Statistical modeling
+* Model each evaluator as:
+
+   * \text{observed_rating} = \text{true_value} + \text{bias}_e + \epsilon
+
+   * bias_e is the evaluator’s systematic bias
+
+   * ε is random noise
+
+Fit a simple linear model or mixed-effects model to estimate bias_e per evaluator.
+* bias_evaluator is systematic bias
+
+* random_noise captures variability
+
+* Control Items / Gold Standard
+* Compare evaluator ratings to known true values to compute bias.
+
+#### Use control items / gold standards
+* Include items with known true values in the evaluation set.
+* Compare evaluator responses to these known values to estimate bias.
+
+#### Simulate biases
+* If you don’t have real evaluators yet, you can assign biases artificially for the simulation:
+
+```
+evaluator_biases = {"Alice": 2.0, "Bob": -1.5, "Charlie": 0.0}
+simulated_rating = true_value + evaluator_biases[evaluator_name] + np.random.normal(0, sigma_noise)
+```
+
+Notes: 
+1. Bias is systematic, noise is random.
+2. For simulation, you can vary bias and noise to test robustness of analysis.
+3. In real experiments, bias estimation requires some form of ground truth or repeated measures.
+
+<!-- 
 ## 11. Milestones & Timeline
 
 | Week | Focus | Deliverable |
@@ -168,7 +243,7 @@ scikit-learn, NumPy, Pandas, Matplotlib/Plotly, Streamlit, (optional) OpenAI or 
    > Recommend collecting 1,000 more samples to confirm superiority.”  
 6. End with a brief operator/PM reflection on decision trade-offs.
 
----
+--- -->
 
 ## 13. Next Steps / Extensions
 
