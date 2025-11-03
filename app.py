@@ -92,25 +92,27 @@ eval_profiles = pd.DataFrame([
 st.dataframe(eval_profiles, use_container_width=True)
 
 # Bias vs Noise visualization
-st.subheader("📉 Evaluator Bias–Noise Tradeoff")
-fig, ax = plt.subplots(figsize=(4.5, 2.8))
+col1, col2 = st.columns(2)
+with col1:
+    st.subheader("📉 Evaluator Bias–Noise Tradeoff")
+    fig, ax = plt.subplots(figsize=(4.5, 2.8))
 
-ax.scatter(
-    eval_profiles["Bias (Mean)"],
-    eval_profiles["Noise"],
-    s=200 * eval_profiles["Cost ($/eval)"],
-    alpha=0.7,
-)
-for _, row in eval_profiles.iterrows():
-    ax.text(row["Bias (Mean)"], row["Noise"], row["Evaluator"], fontsize=9)
+    ax.scatter(
+        eval_profiles["Bias (Mean)"],
+        eval_profiles["Noise"],
+        s=200 * eval_profiles["Cost ($/eval)"],
+        alpha=0.7,
+    )
+    for _, row in eval_profiles.iterrows():
+        ax.text(row["Bias (Mean)"], row["Noise"], row["Evaluator"], fontsize=9)
 
-ax.axvline(0, color="gray", linestyle="--")
-ax.set_xlabel("Evaluator Bias (systematic offset)")
-ax.set_ylabel("Noise (random variance)")
-ax.set_title("Bias–Noise–Cost Landscape of Evaluators")
-ax.tick_params(axis='both', labelsize=6)
-ax.legend()
-st.pyplot(fig, use_container_width=False)
+    ax.axvline(0, color="gray", linestyle="--")
+    ax.set_xlabel("Evaluator Bias (systematic offset)")
+    ax.set_ylabel("Noise (random variance)")
+    ax.set_title("Bias–Noise–Cost Landscape of Evaluators")
+    ax.tick_params(axis='both', labelsize=6)
+    ax.legend()
+    st.pyplot(fig, use_container_width=False)
 
 # Evaluator selection
 st.markdown("### Select Evaluators to Compare")

@@ -171,7 +171,7 @@ sigma_B = sigma_baseline  # or adjust proportionally
 Notes: 
 1. In real experiments, true mean and std are unknown. In the simulator, these are assumptions or estimates.
 
-### 2️⃣ Evaluator Bias per Variant
+## ✅ Pre-Requisite: Measuring Human Evaluator Bias for Simulator Inputs
 
 Each evaluator may systematically over- or under-rate a variant.
 This is how one can estimate it:
@@ -186,17 +186,15 @@ observed_rating = true_value + bias_evaluator + random_noise
 #### Statistical modeling
 * Model each evaluator as:
 
-   * \text{observed_rating} = \text{true_value} + \text{bias}_e + \epsilon
+   * $$observed\_rating = true\_value + bias_e + \epsilon$$
 
-   * bias_e is the evaluator’s systematic bias
+   * `bias_e` is the evaluator’s systematic bias
 
-   * ε is random noise
+   * `ε` is random noise
 
 Fit a simple linear model or mixed-effects model to estimate bias_e per evaluator.
-* bias_evaluator is systematic bias
-
-* random_noise captures variability
-
+* `bias_e` is systematic bias
+* `ε` captures variability
 * Control Items / Gold Standard
 * Compare evaluator ratings to known true values to compute bias.
 
@@ -217,7 +215,65 @@ Notes:
 2. For simulation, you can vary bias and noise to test robustness of analysis.
 3. In real experiments, bias estimation requires some form of ground truth or repeated measures.
 
-<!-- 
+## ✅ Pre-Requisite: Measuring LLM Evaluator Bias for Simulator Inputs
+
+Before using LLM-generated labels or ratings in the experiment simulator, we must quantify each model’s evaluator bias. This ensures the simulator reflects realistic LLM behavior instead of assuming perfect accuracy.
+
+
+1️⃣ **Select LLMs to Compare**  
+For example:  
+- `LLM_A = GPT-x`  
+- `LLM_B = Claude-x`  
+(Any two or more models can be evaluated.)
+
+2️⃣ **Prepare Ground-Truth Data**  
+Use a labeled sample of feedback representing churned + retained customers.  
+This allows comparing LLM scores to known truth.
+
+3️⃣ **Score Each Sample with Each LLM**  
+Each model independently rates the same feedback set:  
+- sentiment scores  
+- churn-likelihood scores  
+- category classification  
+(or whatever metric is extracted)
+
+4️⃣ **Compute Systematic Bias per LLM**
+Bias = average difference from ground truth:
+
+
+$$
+bias_m = \mathbb{E}[(LLM_m \ score) - (true \ score)]
+$$
+
+Variance measures how noisy the evaluator is:
+
+$$
+\sigma_m^2 = Var[(LLM_m \ score) - (true \ score)]
+$$
+
+
+
+Example:
+```python
+bias_llm_A = np.mean(scores_llm_A - true_scores)
+bias_llm_B = np.mean(scores_llm_B - true_scores)
+```
+
+If no ground truth exists → use model consensus or gold-standard items.
+
+5️⃣ Extract Noise / Variability
+Measure variance to understand stability:
+
+6️⃣ Feed Bias + Noise Into the Simulator
+Each LLM acts as a distinct evaluator profile with its own:
+
+mean bias
+
+variance
+
+distribution shape
+
+
 ## 11. Milestones & Timeline
 
 | Week | Focus | Deliverable |
