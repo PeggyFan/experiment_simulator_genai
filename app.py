@@ -20,8 +20,18 @@ from simulation_engine import simulate_experiments, summarize_results, generate_
 # ---------------------------------------------------
 # PAGE SETUP
 # ---------------------------------------------------
-st.set_page_config(page_title="GenAI Experimentation Lab", layout="wide")
-st.title("🧠 GenAI Experimentation Lab")
+st.markdown("""
+<h1 style='text-align:center; font-weight:700;'>
+GenAI Feature Experiment Simulator 🎯
+</h1>
+<p style='text-align:center; color:#5d6b82;'>
+Plan, predict, and evaluate model-driven A/B tests — before launch.
+</p>
+<hr>
+""", unsafe_allow_html=True)
+
+# st.set_page_config(page_title="GenAI Experimentation Lab", layout="wide")
+# st.title("🧠 GenAI Experimentation Lab")
 
 st.markdown("""
 Simulate how **LLM-based evaluators** (vs human raters) can distort or accelerate A/B testing outcomes 
@@ -35,6 +45,21 @@ st.divider()
 # ---------------------------------------------------
 # SCENARIO SELECTOR
 # ---------------------------------------------------
+
+with st.sidebar:
+    st.header("Experiment Controls")
+    st.subheader("Variant Setup")
+
+    true_mean_A = st.number_input("True Mean — Variant A", value=3.5, min_value=0.0, max_value=5.0)
+    true_mean_B = st.number_input("True Mean — Variant B", value=3.8, min_value=0.0, max_value=5.0)
+    true_std = st.number_input("True Std Dev", value=0.6, min_value=0.1)
+
+    st.subheader("Evaluator Profile")
+    rater_bias_mean = st.number_input("Average Evaluator Bias", value=0.2)
+    rater_bias_std = st.number_input("Bias Std Dev", value=0.1)
+
+    n_evaluators = st.number_input("Number of Evaluators", value=50, min_value=1)
+
 
 st.header("🧩 Choose an Experiment Scenario")
 
@@ -89,30 +114,61 @@ eval_profiles = pd.DataFrame([
     for name, cfg in evaluators_dict.items()
 ])
 
-st.dataframe(eval_profiles, use_container_width=True)
+# st.dataframe(eval_profiles.reset_index(drop=True), use_container_width=True)
+# -------------------------
+# Compact Evaluator Profiles Table
+# -------------------------
+st.markdown(
+    """
+    <style>
+        .compact-table table {
+            margin-left:auto;
+            margin-right:auto;
+            border-collapse: collapse;
+            width: 70%;
+            font-size: 12px;      /* smaller font */
+        }
+        .compact-table th, .compact-table td {
+            border: 1px solid #ccc;
+            padding: 4px 6px;     /* tighter padding */
+            text-align: left;
+        }
+        .compact-table th {
+            background-color: #2a4d8f;  /* header background color */
+            color: white;               /* header text color */
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    "<div class='compact-table'>" + eval_profiles.to_html(index=False) + "</div>",
+    unsafe_allow_html=True
+)
+
+
 
 # Bias vs Noise visualization
 col1, col2 = st.columns(2)
-with col1:
-    st.subheader("📉 Evaluator Bias–Noise Tradeoff")
-    fig, ax = plt.subplots(figsize=(4.5, 2.8))
-
-    ax.scatter(
-        eval_profiles["Bias (Mean)"],
-        eval_profiles["Noise"],
-        s=200 * eval_profiles["Cost ($/eval)"],
-        alpha=0.7,
-    )
-    for _, row in eval_profiles.iterrows():
-        ax.text(row["Bias (Mean)"], row["Noise"], row["Evaluator"], fontsize=9)
-
-    ax.axvline(0, color="gray", linestyle="--")
-    ax.set_xlabel("Evaluator Bias (systematic offset)")
-    ax.set_ylabel("Noise (random variance)")
-    ax.set_title("Bias–Noise–Cost Landscape of Evaluators")
-    ax.tick_params(axis='both', labelsize=6)
-    ax.legend()
-    st.pyplot(fig, use_container_width=False)
+# with col1:
+st.subheader("📉 Evaluator Bias–Noise Tradeoff")
+fig, ax = plt.subplots(figsize=(4.5, 2.8))
+ax.scatter(
+    eval_profiles["Bias (Mean)"],
+    eval_profiles["Noise"],
+    s=200 * eval_profiles["Cost ($/eval)"],
+    alpha=0.7,
+)
+for _, row in eval_profiles.iterrows():
+    ax.text(row["Bias (Mean)"], row["Noise"], row["Evaluator"], fontsize=9)
+ax.axvline(0, color="gray", linestyle="--")
+ax.set_xlabel("Evaluator Bias (systematic offset)")
+ax.set_ylabel("Noise (random variance)")
+ax.set_title("Bias–Noise–Cost Landscape of Evaluators")
+ax.tick_params(axis='both', labelsize=6)
+ax.legend()
+st.pyplot(fig, use_container_width=False)
 
 # Evaluator selection
 st.markdown("### Select Evaluators to Compare")
@@ -172,39 +228,37 @@ if run_sim:
     st.markdown("### 📈 Aggregated Summary of Observed Metrics")
     st.dataframe(summary_df, use_container_width=True)
 
-    col1, col2 = st.columns(2)
+    # col1, col2 = st.columns(2)
 
-    with col1:
+    # with col1:
          # Cost vs accuracy tradeoff
-        st.subheader("💸 Cost vs Observed Mean")
-        fig3, ax3 = plt.subplots(figsize=(4.5, 2.8))
-        for eval_type in summary_df["EvaluatorType"].unique():
-            sub = summary_df[summary_df["EvaluatorType"] == eval_type]
-            ax3.scatter(sub["AvgCost($)"], sub["ObservedMean_Mean"], label=eval_type)
-        ax3.set_xlabel("Average Cost ($)")
-        ax3.set_ylabel("Observed Mean Score")
-        ax.tick_params(axis='both', labelsize=6)
-        ax3.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-        st.pyplot(fig3, use_container_width=True)
-
-    with col2:
-         # Plot observed mean vs true mean
-        st.subheader("🎯 Observed Mean vs True Mean (Evaluator Bias)")
-        fig2, ax2 = plt.subplots(figsize=(4.5, 2.8))
-        for eval_type in summary_df["EvaluatorType"].unique():
-            sub = summary_df[summary_df["EvaluatorType"] == eval_type]
-            ax2.bar(sub["Variant"] + f" ({eval_type})", sub["ObservedMean_Mean"], yerr=sub["ObservedMean_Std"], label=eval_type)
-        ax2.axhline(y=list(variant_params.values())[0]["mean"], color="gray", linestyle="--", label="True Means")
-        ax2.set_ylabel("Observed Mean Score")
-        ax2.set_xlabel("Evaluator and Variant")
-        ax.tick_params(axis='both', labelsize=4)
-        ax2.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-        st.pyplot(fig2, use_container_width=True)
+    st.subheader("💸 Cost vs Observed Mean")
+    fig3, ax3 = plt.subplots(figsize=(4.5, 2.8))
+    for eval_type in summary_df["EvaluatorType"].unique():
+        sub = summary_df[summary_df["EvaluatorType"] == eval_type]
+        ax3.scatter(sub["AvgCost($)"], sub["ObservedMean_Mean"], label=eval_type)
+    ax3.set_xlabel("Average Cost ($)")
+    ax3.set_ylabel("Observed Mean Score")
+    ax.tick_params(axis='both', labelsize=6)
+    ax3.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    st.pyplot(fig3, use_container_width=True)
+        #vwith col2:
+    # Plot observed mean vs true mean
+    st.subheader("🎯 Observed Mean vs True Mean (Evaluator Bias)")
+    fig2, ax2 = plt.subplots(figsize=(4.5, 2.8))
+    for eval_type in summary_df["EvaluatorType"].unique():
+        sub = summary_df[summary_df["EvaluatorType"] == eval_type]
+        ax2.bar(sub["Variant"] + f" ({eval_type})", sub["ObservedMean_Mean"], yerr=sub["ObservedMean_Std"], label=eval_type)
+    ax2.axhline(y=list(variant_params.values())[0]["mean"], color="gray", linestyle="--", label="True Means")
+    ax2.set_ylabel("Observed Mean Score")
+    ax2.set_xlabel("Evaluator and Variant")
+    ax.tick_params(axis='both', labelsize=4)
+    ax2.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    st.pyplot(fig2, use_container_width=True)
 
 
     # PM Summary
     st.markdown("---")
-    st.markdown("## 🧠 PM Decision Summary")
     st.markdown(pm_report)
 
     st.download_button(
@@ -285,3 +339,4 @@ with st.expander("💡 Under the Hood: Why LLM Experimentation is Different"):
     This simulator helps PMs quantify when LLM-based evaluation is *good enough* to launch — 
     and when to bring humans back in the loop.
     """)
+

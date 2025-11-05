@@ -141,6 +141,7 @@ scikit-learn, NumPy, Pandas, Matplotlib/Plotly, Streamlit, (optional) OpenAI or 
 | Cost model complexity | Start with token-based linear model; add latency later |
 | Too technical for PM audience | Focus on visualization and plain-language interpretation |
 
+
 ## Experiment Simulator Inputs
 
 ### 1️⃣ True Mean & Standard Deviation per Variant
@@ -171,7 +172,7 @@ sigma_B = sigma_baseline  # or adjust proportionally
 Notes: 
 1. In real experiments, true mean and std are unknown. In the simulator, these are assumptions or estimates.
 
-## ✅ Pre-Requisite: Measuring Human Evaluator Bias for Simulator Inputs
+## Pre-Requisite #1: Measuring Human Evaluator Bias for Simulator Inputs
 
 Each evaluator may systematically over- or under-rate a variant.
 This is how one can estimate it:
@@ -215,32 +216,30 @@ Notes:
 2. For simulation, you can vary bias and noise to test robustness of analysis.
 3. In real experiments, bias estimation requires some form of ground truth or repeated measures.
 
-## ✅ Pre-Requisite: Measuring LLM Evaluator Bias for Simulator Inputs
+## Pre-Requisite #2: Measuring LLM Evaluator Bias for Simulator Inputs
 
 Before using LLM-generated labels or ratings in the experiment simulator, we must quantify each model’s evaluator bias. This ensures the simulator reflects realistic LLM behavior instead of assuming perfect accuracy.
 
 
-1️⃣ **Select LLMs to Compare**  
+1. **Select LLMs to Compare**  
 For example:  
 - `LLM_A = GPT-x`  
 - `LLM_B = Claude-x`  
 (Any two or more models can be evaluated.)
 
-2️⃣ **Prepare Ground-Truth Data**  
+2. **Prepare Ground-Truth Data**  
 Use a labeled sample of feedback representing churned + retained customers.  
 This allows comparing LLM scores to known truth.
 
-3️⃣ **Score Each Sample with Each LLM**  
+3. **Score Each Sample with Each LLM**  
 Each model independently rates the same feedback set:  
 - sentiment scores  
 - churn-likelihood scores  
 - category classification  
 (or whatever metric is extracted)
 
-4️⃣ **Compute Systematic Bias per LLM**
+4. **Compute Systematic Bias per LLM**
 Bias = average difference from ground truth:
-
-
 $$
 bias_m = \mathbb{E}[(LLM_m \ score) - (true \ score)]
 $$
@@ -251,8 +250,6 @@ $$
 \sigma_m^2 = Var[(LLM_m \ score) - (true \ score)]
 $$
 
-
-
 Example:
 ```python
 bias_llm_A = np.mean(scores_llm_A - true_scores)
@@ -261,60 +258,22 @@ bias_llm_B = np.mean(scores_llm_B - true_scores)
 
 If no ground truth exists → use model consensus or gold-standard items.
 
-5️⃣ Extract Noise / Variability
-Measure variance to understand stability:
+5. Extract Noise / Variability
+Measure variance to understand stability
 
-6️⃣ Feed Bias + Noise Into the Simulator
+5. Feed Bias + Noise Into the Simulator
 Each LLM acts as a distinct evaluator profile with its own:
+mean bias, variance, distribution shape
 
-mean bias
+### App Input Constraints
+Several parameters have artificial caps in this app due to the constraints on memory, perforamnce of being deployed on steamlit as a lightweight app and demo only.
 
-variance
+Samples per Variant at 2000
+Simulation Replications at 50
+Monte Carlo Simulation at 1000
 
-distribution shape
 
-
-## 11. Milestones & Timeline
-
-| Week | Focus | Deliverable |
-|------|--------|-------------|
-| 1 | Product framing & metric definition | This spec + architecture sketch |
-| 2 | Simulation engine | `simulation_engine.py` generating A/B and bandit data |
-| 3 | Evaluation simulator & cost model | LLM/human modes + token/latency tracking |
-| 4 | Visualization UI | Streamlit dashboard (decision dashboard) |
-| 5 | PM report generator | Auto-summary text or PDF export |
-| 6 | Demo polish | Scenario library + storytelling walkthrough |
-
----
-
-## 12. Demo & Storytelling Plan
-
-1. Introduce the problem: “Why GenAI experimentation is different.”  
-2. Run a live simulation (A/B vs bandit).  
-3. Toggle between **LLM** and **human evaluation modes** — show noise differences.  
-4. Show cost impact (e.g., token cost per variant).  
-5. Display the **PM Summary Report**:  
-   > “Variant B shows higher mean helpfulness (+0.07) with 95% confidence.  
-   > Estimated cost per evaluation: $0.002.  
-   > Recommend collecting 1,000 more samples to confirm superiority.”  
-6. End with a brief operator/PM reflection on decision trade-offs.
-
---- -->
-
-## 13. Next Steps / Extensions
-
-- Add real evaluation data (e.g., human-rated summaries).  
+## 13. Extension Ideas
 - Integrate cost APIs (OpenAI or Anthropic pricing).  
-- Add export feature (PDF, Markdown).  
-- Deploy public demo (Streamlit Cloud / Hugging Face Spaces).  
 - Extend evaluation models (pairwise preference, ranking).  
-- Add live Bayesian updating visualization.
-
----
-experiment_simulator_genai/
-│
-├── app.py                      # Streamlit front-end (already built)
-├── simulation_engine.py        # Core simulation logic (we’ll build this)
-├── experiment_runner.py        # Experiment strategies (A/B, Bandit, etc.)
-├── utils.py                    # Shared functions (confidence intervals, summaries)
-└── data/  
+- Add Bayesian or Multiarm bandit for simulations

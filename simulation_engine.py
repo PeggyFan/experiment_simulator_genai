@@ -206,7 +206,7 @@ def generate_pm_summary(summary_df, reliability_df=None, mc_results=None):
 # ---------------------------------------------------
 
 if __name__ == "__main__":
-    print("Available evaluators:", list_evaluators())
+    # print("Available evaluators:", list_evaluators())
 
     # Example setup
     variant_params = {

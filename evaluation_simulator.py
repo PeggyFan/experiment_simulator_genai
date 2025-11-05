@@ -43,7 +43,7 @@ def list_evaluators():
     return {
         "LLM_v1": Evaluator(
             name="LLM_v1",
-            bias={"A": 0.1, "B": -0.05, "C": 0.0},
+            bias={"A": 0.1, "B": -0.05},
             noise=0.3,
             cost_per_eval=0.002,
             latency_per_eval=0.6,
@@ -51,7 +51,7 @@ def list_evaluators():
         ),
         "LLM_v2": Evaluator(
             name="LLM_v2",
-            bias={"A": 0.05, "B": 0.0, "C": -0.03},
+            bias={"A": 0.05, "B": 0.0},
             noise=0.2,
             cost_per_eval=0.004,
             latency_per_eval=0.7,
@@ -59,7 +59,7 @@ def list_evaluators():
         ),
         "Human": Evaluator(
             name="Human",
-            bias={"A": 0.0, "B": 0.0, "C": 0.0},
+            bias={"A": 0.0, "B": 0.0},
             noise=0.1,
             cost_per_eval=0.05,
             latency_per_eval=5.0,
@@ -67,7 +67,7 @@ def list_evaluators():
         ),
         "Hybrid": Evaluator(
             name="Hybrid",
-            bias={"A": 0.02, "B": -0.02, "C": 0.0},
+            bias={"A": 0.02, "B": -0.02},
             noise=0.15,
             cost_per_eval=0.015,
             latency_per_eval=1.5,
